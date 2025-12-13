@@ -69,22 +69,18 @@ class MediaController extends Controller
                 if ($thumbnailName) {
                     $mediaInfo['thumbnail_url'] = MediaService::getFileUrl($thumbnailName, 'thumbnails/' . $directory);
                 }
-
             } else {
                 $actualFileName = is_array($fileName) ? $fileName[0]['filename'] ?? $fileName : $fileName;
                 $mediaInfo = MediaService::getMediaInfo($actualFileName, $directory);
             }
 
-            if ($request->input('deleted_media'))
-            {
+            if ($request->input('deleted_media')) {
                 $media = Media::findOrFail($request->input('deleted_media'));
                 $media->delete();
             }
 
-
-
             $media = Media::create([
-                'model_type'       => 'App\\Models\\' . Str::studly(Str::singular($model)),
+                'model_type'        => 'App\\Models\\' . Str::studly(Str::singular($model)),
                 'name'              => $actualFileName,
                 'type'              => $mediaInfo['type'],
                 'path'              => $directory,
@@ -101,16 +97,15 @@ class MediaController extends Controller
 
             DB::commit();
             return json([
-                'id' => $media->id,
-                'name' => $actualFileName,
-//                'url'                 => $mediaInfo['url'],
-                'type' => $mediaInfo['type'],
-//                'size'                => $mediaInfo['size'],
-//                'thumbnail_url'       => $mediaInfo['thumbnail'] ?? $mediaInfo['thumbnail_url'] ?? null,
-//                'thumbnail_generated' => $mediaInfo['thumbnail_generated'] ?? false,
-//                'metadata'            => $mediaInfo['metadata'] ?? null
+                'id'                  => $media->id,
+                'name'                => $actualFileName,
+                'url'                 => $mediaInfo['url'],
+                'type'                => $mediaInfo['type'],
+                'size'                => $mediaInfo['size'],
+                'thumbnail_url'       => $mediaInfo['thumbnail'] ?? $mediaInfo['thumbnail_url'] ?? null,
+                'thumbnail_generated' => $mediaInfo['thumbnail_generated'] ?? false,
+                'metadata'            => $mediaInfo['metadata'] ?? null
             ], trans('File uploaded successfully'), 'success', 200);
-
         } catch (Exception $e) {
             DB::rollBack();
             return json(null, trans('Something went wrong, please try again'), 'fail', 422);
