@@ -61,13 +61,11 @@ class UploadMediaObserver
     }
     public function deleting(Model $model): void
     {
-        if ($model->media()->exists()) {
-            $medias = Media::where('model_id', $model->id)
-                ->where('model_type', get_class($model))
-                ->get();
-            foreach ($medias as $media) {
+        if (method_exists($model, 'media') && $model->media()->exists()) {
+            $model->media()->each(function ($media) {
                 $media->delete();
-            }
+            });
         }
     }
 }
+    

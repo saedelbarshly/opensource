@@ -16,5 +16,6 @@ class MediaServiceProvider extends ServiceProvider
     {
         Media::observe(MediaObserver::class);
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadRoutesFrom(__DIR__.'/../Routes/api.php');
     }
 }

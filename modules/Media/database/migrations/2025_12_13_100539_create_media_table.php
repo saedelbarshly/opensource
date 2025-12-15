@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('media', function (Blueprint $table) {
+          Schema::create('media', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->nullableMorphs('model');
             $table->text('name')->nullable();
@@ -22,7 +22,15 @@ return new class extends Migration
             $table->string('height')->nullable();
             $table->string('duration')->nullable();
             $table->string('quality')->nullable();
+            $table->boolean('has_thumbnail')->default(false);
+            $table->boolean('has_hls')->default(false);
             $table->string('thumbnail_name')->nullable();
+            $table->string('hls_name')->nullable();
+            $table->string('hls_240p_name')->nullable();
+            $table->string('hls_360p_name')->nullable();
+            $table->string('hls_480p_name')->nullable();
+            $table->string('hls_720p_name')->nullable();
+            $table->string('hls_1080p_name')->nullable();
             $table->string('disk')->default('public');
             $table->string('path')->nullable();
             $table->string('option')->nullable();
@@ -31,6 +39,16 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamps();
         });
+
+        // Schema::create('media_translations', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->foreignUuid('media_id')
+        //         ->constrained('media')
+        //         ->cascadeOnDelete();
+        //     $table->string('alt');
+        //     $table->string('locale')->index();
+        //     $table->unique(['media_id', 'locale']);
+        // });
     }
 
     /**

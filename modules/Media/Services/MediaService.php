@@ -1,4 +1,5 @@
 <?php
+
 namespace Modules\Media\Services;
 
 
@@ -65,8 +66,7 @@ class MediaService
         ?int               $width = null,
         ?int               $height = null,
         int                $quality = self::DEFAULT_IMAGE_QUALITY
-    ): string|array
-    {
+    ): string|array {
         try {
             $imageManager = new ImageManager(new Driver());
             $directory = self::createDirectory('images', $url);
@@ -91,14 +91,13 @@ class MediaService
         string             $key = 'video',
         bool               $generateThumbnail = false,
         bool               $generateSLH = false
-    ): string|array
-    {
+    ): string|array {
         try {
             $directory = self::createDirectory('videos', $url);
             $thumbnailDirectory = self::createDirectory('thumbnails', 'videos');
 
             if (is_array($files)) {
-                return self::processMultipleVideos($files, $directory, $key);
+                return self::processMultipleVideos($files, $directory, $key, $generateThumbnail, $generateSLH, $thumbnailDirectory);
             }
 
             return self::processSingleVideo($files, $directory, $generateThumbnail, $generateSLH, $thumbnailDirectory);
@@ -116,8 +115,7 @@ class MediaService
         string             $url = 'documents',
         string             $key = 'pdf',
         bool               $generateThumbnail = false
-    ): string|array
-    {
+    ): string|array {
         try {
             $directory = self::createDirectory('documents', $url);
             $thumbnailDirectory = self::createDirectory('thumbnails', 'documents');
@@ -140,8 +138,7 @@ class MediaService
         UploadedFile|array $files,
         string             $url = 'audio',
         string             $key = 'audio'
-    ): string|array
-    {
+    ): string|array {
         try {
             $directory = self::createDirectory('audio', $url);
 
@@ -163,8 +160,7 @@ class MediaService
         UploadedFile|array $files,
         string             $url = 'files',
         string             $key = 'file'
-    ): string|array
-    {
+    ): string|array {
         try {
             $directory = self::createDirectory('files', $url);
 
@@ -281,8 +277,7 @@ class MediaService
         ?int         $height,
         int          $quality,
         ImageManager $imageManager
-    ): string
-    {
+    ): string {
         self::validateFile($file, 'image');
 
         $fileName = Str::uuid() . '.webp';
@@ -300,10 +295,7 @@ class MediaService
             ->orient();
 
         if ($width || $height) {
-            $image->resize($width, $height, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            });
+            $image->resize($width, $height);
         }
 
         $image->toWebp($quality)->save($directory . $fileName);
@@ -320,8 +312,7 @@ class MediaService
         bool         $generateThumbnail = false,
         bool         $generateSLH = false,
         string       $thumbnailDirectory = ''
-    ): array
-    {
+    ): string|array {
         $result = [];
         self::validateFile($file, 'video');
 
@@ -335,7 +326,7 @@ class MediaService
         $result['filename'] = $fileName;
 
         try {
-            if($generateSLH) {
+            if ($generateSLH) {
                 $hlsDir = rtrim($directory, '/') . '/hls/' . pathinfo($fileName, PATHINFO_FILENAME);
                 if (!is_dir($hlsDir)) {
                     mkdir($hlsDir, 0777, true);
@@ -349,14 +340,12 @@ class MediaService
                 $result['hls_480p_name'] = 'storage/videos/hls/' . pathinfo($fileName, PATHINFO_FILENAME) . '/stream_480p.m3u8';
                 $result['hls_720p_name'] = 'storage/videos/hls/' . pathinfo($fileName, PATHINFO_FILENAME) . '/stream_720p.m3u8';
                 $result['hls_1080p_name'] = 'storage/videos/hls/' . pathinfo($fileName, PATHINFO_FILENAME) . '/stream_1080p.m3u8';
-
             }
             if ($generateThumbnail && $thumbnailDirectory) {
                 $thumbnailName = self::generateVideoThumbnail($filePath, $thumbnailDirectory, $fileName);
 
                 $result['thumbnail_name'] = 'storage/thumbnails/videos/' . $thumbnailName;
             }
-
         } catch (Exception $e) {
             Log::warning('Failed to generate HLS: ' . $e->getMessage());
         }
@@ -373,14 +362,14 @@ class MediaService
         string $directory,
         string $key,
         bool   $generateThumbnail = false,
+        bool   $generateSLH = false,
         string $thumbnailDirectory = ''
-    ): array
-    {
+    ): array {
         $videos = [];
 
         foreach ($files as $file) {
             if ($file instanceof UploadedFile) {
-                $fileName = self::processSingleVideo($file, $directory, $generateThumbnail, $thumbnailDirectory);
+                $fileName = self::processSingleVideo($file, $directory, $generateThumbnail, $generateSLH, $thumbnailDirectory);
                 $videos[] = [$key => $fileName];
             }
         }
@@ -396,8 +385,7 @@ class MediaService
         string       $directory,
         bool         $generateThumbnail = false,
         string       $thumbnailDirectory = ''
-    ): array
-    {
+    ): array {
         // Validate PDF
         if ($file->getMimeType() !== 'application/pdf') {
             throw new Exception('Invalid PDF file');
@@ -436,8 +424,7 @@ class MediaService
         string $key,
         bool   $generateThumbnail = false,
         string $thumbnailDirectory = ''
-    ): array
-    {
+    ): array {
         $pdfs = [];
 
         foreach ($files as $file) {
@@ -498,8 +485,7 @@ class MediaService
         ?int         $height,
         int          $quality,
         ImageManager $imageManager
-    ): array
-    {
+    ): array {
         $images = [];
 
         foreach ($files as $file) {
@@ -574,24 +560,42 @@ class MediaService
 
             $process = new Process([
                 $ffmpegPath,
-                '-i', $videoPath,
-                '-c:a', 'aac',
-                '-ar', '48000',
-                '-c:v', 'h264',
-                '-profile:v', 'main',
-                '-crf', '20',
-                '-sc_threshold', '0',
-                '-g', '48',
-                '-keyint_min', '48',
-                '-b:v', $config['videoBitrate'],
-                '-maxrate', $config['videoBitrate'],
-                '-bufsize', '1200k',
-                '-b:a', $config['audioBitrate'],
-                '-vf', "scale=-2:{$label}",
-                '-hls_time', '4',
-                '-hls_playlist_type', 'vod',
-                '-hls_segment_filename', "{$outputDir}/{$baseName}_{$label}p_%03d.ts",
-                '-f', 'hls',
+                '-i',
+                $videoPath,
+                '-c:a',
+                'aac',
+                '-ar',
+                '48000',
+                '-c:v',
+                'h264',
+                '-profile:v',
+                'main',
+                '-crf',
+                '20',
+                '-sc_threshold',
+                '0',
+                '-g',
+                '48',
+                '-keyint_min',
+                '48',
+                '-b:v',
+                $config['videoBitrate'],
+                '-maxrate',
+                $config['videoBitrate'],
+                '-bufsize',
+                '1200k',
+                '-b:a',
+                $config['audioBitrate'],
+                '-vf',
+                "scale=-2:{$label}",
+                '-hls_time',
+                '4',
+                '-hls_playlist_type',
+                'vod',
+                '-hls_segment_filename',
+                "{$outputDir}/{$baseName}_{$label}p_%03d.ts",
+                '-f',
+                'hls',
                 $outputPath
             ]);
 
@@ -715,19 +719,26 @@ class MediaService
 
         $process = new Process([
             $ffmpegPath,
-            '-i', $videoPath,
-            '-ss', '00:00:02',
-            '-vframes', '1',
-            '-vf', sprintf(
+            '-i',
+            $videoPath,
+            '-ss',
+            '00:00:02',
+            '-vframes',
+            '1',
+            '-vf',
+            sprintf(
                 'scale=%d:%d:force_original_aspect_ratio=decrease,pad=%d:%d:(ow-iw)/2:(oh-ih)/2',
                 self::THUMBNAIL_WIDTH,
                 self::THUMBNAIL_HEIGHT,
                 self::THUMBNAIL_WIDTH,
                 self::THUMBNAIL_HEIGHT
             ),
-            '-vcodec', 'libwebp',
-            '-compression_level', '6',
-            '-qscale', '90',
+            '-vcodec',
+            'libwebp',
+            '-compression_level',
+            '6',
+            '-qscale',
+            '90',
             '-y',
             $thumbnailPath
         ]);
@@ -767,10 +778,13 @@ class MediaService
 
         $process = new Process([
             $convertPath,
-            '-density', '150',
+            '-density',
+            '150',
             "{$pdfPath}[0]",
-            '-resize', sprintf('%dx%d', self::THUMBNAIL_WIDTH, self::THUMBNAIL_HEIGHT),
-            '-quality', '90',
+            '-resize',
+            sprintf('%dx%d', self::THUMBNAIL_WIDTH, self::THUMBNAIL_HEIGHT),
+            '-quality',
+            '90',
             $thumbnailPath
         ]);
 
@@ -815,7 +829,6 @@ class MediaService
                             return $foundPath;
                         }
                     }
-
                 } catch (ProcessFailedException $e) {
                     Log::warning('Failed to locate ffmpeg via PATH: ' . $e->getMessage());
                 }
