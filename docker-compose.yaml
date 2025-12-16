@@ -45,6 +45,24 @@ services:
     networks:
       - opensource
 
+  # --------------------------------------------------
+  # phpMyAdmin
+  # --------------------------------------------------
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: opensource_pma
+    links:
+      - mysql:db
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_ARBITRARY: 1
+    depends_on:
+      - mysql
+    networks:
+      - opensource
+
 # --------------------------------------------------
 # Networks
 # --------------------------------------------------
