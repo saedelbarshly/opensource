@@ -1,0 +1,96 @@
+# --------------------------------------------------
+# Base Image
+# --------------------------------------------------
+# Use official PHP 8.2 FPM image (stable & production-ready)
+FROM php:8.2-fpm
+
+# --------------------------------------------------
+# Install system dependencies required by Laravel
+# --------------------------------------------------
+# - git, curl: common tools
+# - image libs: required for GD (images, Intervention)
+# - zip/unzip: required for Composer & Laravel
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    \
+    # Configure and install PHP extensions
+    # gd      → image processing
+    # pdo_mysql → MySQL support
+    # mbstring → Laravel requirement
+    # exif   → image metadata
+    # pcntl  → queues & workers
+    # bcmath → payments & calculations
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+    gd \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    \
+    # Clean apt cache to reduce image size
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# --------------------------------------------------
+# Install Composer (from official Composer image)
+# --------------------------------------------------
+# This avoids installing Composer manually
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# --------------------------------------------------
+# Set working directory inside container
+# --------------------------------------------------
+# All commands will run from this directory
+WORKDIR /var/www
+
+# --------------------------------------------------
+# Copy Composer files first (Docker cache optimization)
+# --------------------------------------------------
+# If dependencies don't change, Docker will reuse cache
+COPY . .
+# --------------------------------------------------
+# Install PHP dependencies (Production mode)
+# --------------------------------------------------
+# --no-dev            → skip dev dependencies
+# --optimize-autoloader → better performance
+# --no-interaction    → non-interactive build
+RUN composer install \
+    --optimize-autoloader \
+    --no-interaction 
+
+# --------------------------------------------------
+# Copy the rest of the Laravel application
+# --------------------------------------------------
+# --chown ensures correct permissions for PHP-FPM
+RUN chown -R www-data:www-data storage bootstrap/cache
+
+# --------------------------------------------------
+# Generate optimized autoload files (and run scripts now that app is copied)
+# --------------------------------------------------
+RUN composer dump-autoload --optimize
+
+# --------------------------------------------------
+# Switch to non-root user for security
+# --------------------------------------------------
+USER www-data
+
+# --------------------------------------------------
+# Expose PHP-FPM port
+# --------------------------------------------------
+# PHP-FPM listens on port 9000 (used by Nginx)
+EXPOSE 9000
+
+# --------------------------------------------------
+# Start PHP-FPM
+# --------------------------------------------------
+CMD ["php-fpm"]

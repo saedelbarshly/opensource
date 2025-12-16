@@ -3,9 +3,10 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
+use Modules\Notification\Traits\NotificationChannelResolver;
 
 class GeneralNotification extends Notification
 {
@@ -36,7 +37,7 @@ class GeneralNotification extends Notification
         if ($this->sendVia === 'mail') {
             return ['mail'];
         }
-        return $this->resolveChannels($notifiable, $this->data['type'] ?? null);
+        return $this->resolveChannels($notifiable);
     }
 
     /**

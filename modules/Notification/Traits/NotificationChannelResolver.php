@@ -3,10 +3,11 @@
 namespace Modules\Notification\Traits;
 
 use App\Enums\UserType;
+use Illuminate\Support\Facades\Log;
 
 trait NotificationChannelResolver
 {
-    protected function resolveChannels(mixed $notifiable, $notification_type): array
+    protected function resolveChannels(mixed $notifiable): array
     {
         $channels = ['database'];
 
@@ -21,7 +22,7 @@ trait NotificationChannelResolver
                 $channels[] = 'fcm';
             }
         } catch (\Throwable $th) {
-            log('error', 'Notification channel resolver error: ' . $th->getMessage());
+           Log::error('Notification channel resolver error: ' . $th->getMessage());
         }
 
         return $channels;
@@ -30,19 +31,19 @@ trait NotificationChannelResolver
     protected function isOnlyRedisPrivilegedUser($notifiable): bool
     {
         return in_array($notifiable->user_type, [
-            UserType::ADMIN,
-            UserType::SUPER_ADMIN,
-            UserType::SUPERVISOR,
-            UserType::COMPANY,
+            // UserType::ADMIN,
+            // UserType::SUPER_ADMIN,
+            // UserType::SUPERVISOR,
+            // UserType::COMPANY,
         ]);
     }
 
     protected function shouldSendFcm($notifiable): bool
     {
         $allowedTypes = [
-            UserType::CLIENT,
-            UserType::DRIVER,
-            UserType::GUEST,
+            // UserType::CLIENT,
+            // UserType::DRIVER,
+            // UserType::GUEST,
         ];
 
         return $notifiable->allow_notification && in_array($notifiable->user_type, $allowedTypes);
