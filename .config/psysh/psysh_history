@@ -1,0 +1,6 @@
+App\Models\User::create(['name'=>"saed",'email=>]);
+App\Models\User::create(['name'=>"saed",'email'=>"saed@gmail.com",'password'=>'123456789','user_type'=>"admin"]);
+App\Models\User::count();
+exite
+out
+exit
