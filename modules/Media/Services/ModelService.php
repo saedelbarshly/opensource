@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace Modules\Media\Services;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\File;
@@ -29,7 +29,7 @@ class ModelService
         }
 
         return collect(File::allFiles($this->modelsPath))
-            ->map(fn ($file) => $this->resolveModelData($file->getPathname()))
+            ->map(fn($file) => $this->resolveModelData($file->getPathname()))
             ->filter()
             ->values()
             ->toArray();
