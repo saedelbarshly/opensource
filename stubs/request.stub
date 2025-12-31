@@ -1,0 +1,20 @@
+<?php
+
+namespace {{ namespace }};
+
+use App\Http\Requests\ApiMasterRequest;
+
+class {{ class }} extends ApiMasterRequest
+{
+    public function authorize()
+    {
+        return true;
+    }
+
+    public function rules()
+    {
+        return [
+            //
+        ];
+    }
+}

@@ -1,0 +1,17 @@
+<?php
+
+namespace {{ namespace }};
+
+use App\Http\Controllers\Api\BaseApiController;
+use App\Http\Requests\Api\Dashboard\{{ namespacePath }}\{{ name }}Request;
+use App\Http\Resources\Api\Dashboard\{{ namespacePath }}\{{ name }}Resource;
+use App\Http\Resources\Api\Dashboard\{{ namespacePath }}\{{ name }}DetailsResource;
+use App\Models\{{ name }};
+
+class {{ name }}Controller extends BaseApiController
+{
+    public function __construct()
+    {
+        parent::__construct({{ name }}::class,{{ name }}Resource::class,{{ name }}DetailsResource::class,{{ name }}Request::class);
+    }
+}
