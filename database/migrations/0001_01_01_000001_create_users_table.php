@@ -14,14 +14,22 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
+            $table->string('email')->nullable();
             $table->string('username')->nullable();
             $table->string('phone_code')->nullable();
             $table->string('phone')->nullable();
             $table->string('user_type')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('phone_verified_at')->nullable();
+            $table->string('reset_code')->nullable();
+            $table->timestamp('reset_code_expires_at')->nullable();
             $table->string('password');
+            $table->string('locale')->default('ar')->nullable();
+            $table->boolean('is_notify')->default(true);
+            $table->boolean('is_super')->default(false);
+            $table->boolean('is_active')->default(false);
+            $table->boolean('is_banned')->default(false);
+            $table->foreignId('role_id')->nullable()->constrained('roles')->nullOnDelete();
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();

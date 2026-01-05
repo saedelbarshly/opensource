@@ -259,9 +259,12 @@ if (!function_exists('extractPrefixFromAction')) {
     }
 }
 
-if (!function_exists('generateUniqueCode')) {
-    function generateUniqueCode($length)
+if (!function_exists('generateOtp')) {
+    function generateOtp($length)
     {
+        if (!app()->isProduction()) {
+            return str_repeat('1', $length);
+        }
         do {
             $code = '';
             for ($i = 0; $i < $length; $i++) {

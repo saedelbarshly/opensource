@@ -23,20 +23,20 @@ trait MediaTrait
         return $this->morphMany(Media::class, 'model');
     }
 
-    public function getMediaAttribute($options = null)
-    {
-        return Media::where('model_id', $this->id)
-            ->where('model_type', get_class($this))
-            ->get()
-            ->map(function ($media) {
-                return [
-                    'id'        => $media->id,
-                    'path'      => asset('storage/' . $media->path . '/' . $media->name),
-                    'type'      => $media->type,
-                    'option'    => $media->option
-                ];
-            });
-    }
+    // public function getMediaAttribute($options = null)
+    // {
+    //     return Media::where('model_id', $this->id)
+    //         ->where('model_type', get_class($this))
+    //         ->get()
+    //         ->map(function ($media) {
+    //             return [
+    //                 'id'        => $media->id,
+    //                 'path'      => asset('storage/' . $media->path . '/' . $media->name),
+    //                 'type'      => $media->type,
+    //                 'option'    => $media->option
+    //             ];
+    //         });
+    // }
 
    public function __get($key)
    {

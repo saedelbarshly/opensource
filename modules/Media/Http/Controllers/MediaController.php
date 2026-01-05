@@ -3,13 +3,13 @@
 namespace Modules\Media\Http\Controllers;
 
 use Exception;
-use App\Services\ModelService;
 use Modules\Media\Models\Media;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Modules\Media\Services\MediaService;
+use Modules\Media\Services\ModelService;
 use Modules\Media\Http\Requests\StoreRequest;
 
 class MediaController extends Controller

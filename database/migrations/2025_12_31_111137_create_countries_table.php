@@ -33,9 +33,8 @@ return new class extends Migration
             $table->string('currency')->nullable();
             $table->string('nationality')->nullable();
             $table->string('locale')->nullable();
-            $table->unique(['country_id', 'locale']);
             $table->foreignId('country_id')->constrained()->cascadeOnDelete();
-            $table->timestamps();
+            $table->unique(['country_id', 'locale']);
         });
     }
 

@@ -31,9 +31,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->nullable();
             $table->string('locale')->nullable();
-            $table->unique(['city_id', 'locale']);
             $table->foreignId('city_id')->constrained()->cascadeOnDelete();
-            $table->timestamps();
+            $table->unique(['city_id', 'locale']);
         });
     }
 

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Services\Dashboard\Sluggable;
+use App\Services\General\Sluggable;
 use Illuminate\Database\Eloquent\Model;
 
 

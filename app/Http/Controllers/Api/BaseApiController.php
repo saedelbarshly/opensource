@@ -103,7 +103,7 @@ class BaseApiController extends Controller
         foreach ($whereConditions as $field => $value) {
             if (
                 ! (
-                    ($conditionType == 'whereLike' && method_exists($this->model, 'isTranslationAttribute') && $this->model->isTranslationAttribute($field)) ||
+                    ($conditionType == 'whereLike' && method_exists($this->model, 'isTranslationAttribute') && (new $this->model)->isTranslationAttribute($field)) ||
                     ($this->columnExists($field))
                 )
             ) {
@@ -193,7 +193,7 @@ class BaseApiController extends Controller
 
     protected function columnExists($columnName)
     {
-        $table = $this->model->getTable();
+        $table = (new $this->model)->getTable();
 
         if (!isset(self::$columnsCache[$table])) {
             self::$columnsCache[$table] = Schema::getColumnListing($table);
