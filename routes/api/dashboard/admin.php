@@ -1,8 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Dashboard\Admin\Faq\FaqController;
 use App\Http\Controllers\Api\Dashboard\Admin\Auth\AuthController;
+use App\Http\Controllers\Api\Dashboard\Admin\City\CityController;
+use App\Http\Controllers\Api\Dashboard\Admin\Page\PageController;
 use App\Http\Controllers\Api\Dashboard\Admin\Auth\PasswordController;
+use App\Http\Controllers\Api\Dashboard\Admin\Country\CountryController;
 use App\Http\Controllers\Api\Dashboard\Admin\Profile\ProfileController;
 use App\Http\Controllers\Api\Dashboard\Admin\Notification\NotificationController;
 use App\Http\Controllers\Api\Dashboard\Admin\Notification\SentNotificationController;
@@ -44,5 +48,22 @@ Route::middleware('set_locale')->group(function () {
 
         Route::get('sender-notifications/users', [SentNotificationController::class, 'users']);
         Route::apiResource('sender-notifications', SentNotificationController::class);
+
+
+        Route::get('countries/list', [CountryController::class, 'getWithoutPagination']);
+        Route::patch('countries/{country}/toggle-active', [CountryController::class, 'toggleActive'])->name('countries.toggle-active');
+        Route::apiResource('countries', CountryController::class);
+
+        Route::get('cities/list', [CityController::class, 'getWithoutPagination']);
+        Route::patch('cities/{city}/toggle-active', [CityController::class, 'toggleActive'])->name('cities.toggle-active');
+        Route::apiResource('cities', CityController::class);
+
+        Route::get('pages/list', [PageController::class, 'getWithoutPagination']);
+        Route::patch('pages/{page}/toggle-active', [PageController::class, 'toggleActive'])->name('pages.toggle-active');
+        Route::apiResource('pages', PageController::class);
+
+        Route::get('faqs/list', [FaqController::class, 'getWithoutPagination']);
+        Route::patch('faqs/{faq}/toggle-active', [FaqController::class, 'toggleActive'])->name('faqs.toggle-active');
+        Route::apiResource('faqs', FaqController::class);
     });
 });

@@ -20,6 +20,7 @@ class FaqRequest extends ApiMasterRequest
                 Rule::unique('faqs', 'ordering')
                     ->ignore($this->faq)
             ],
+            'is_active' => 'required|boolean',
         ];
         foreach (config('translatable.locales') as $locale) {
             $rules[$locale . '.question'] = 'required|string';

@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\Country;
 use Illuminate\Database\Eloquent\Model;
-use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
 use Astrotomic\Translatable\Translatable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
 
 
 class City extends Model implements TranslatableContract
@@ -13,9 +15,15 @@ class City extends Model implements TranslatableContract
     protected $guarded = ['id', 'created_at', 'updated_at', 'deleted_at'];
     public $translatedAttributes = ['name'];
 
-
+    // scope
     public function scopeActive($query){
         return $query->where('is_active', 1);
+    }
+
+    // relation
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
     }
 
 }

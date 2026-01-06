@@ -14,7 +14,7 @@ class PageRequest extends ApiMasterRequest
         return true;
     }
 
-    public function rules()
+    public function rules(): array
     {
         $rules = [
             'ordering' => [

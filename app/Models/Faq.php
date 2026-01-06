@@ -11,7 +11,7 @@ class Faq extends Model implements TranslatableContract
 {
     use  Translatable;
     protected $guarded = ['id', 'created_at', 'updated_at', 'deleted_at'];
-    public $translatedAttributes = ['name'];
+    public $translatedAttributes = ['question', 'answer'];
 
 
     public function scopeActive($query){

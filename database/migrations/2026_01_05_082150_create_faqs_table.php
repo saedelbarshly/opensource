@@ -15,8 +15,7 @@ return new class extends Migration
     {
         Schema::create('faqs', function (Blueprint $table) {
             $table->id();
-            $table->text('question');
-            $table->text('answer');
+            $table->integer('ordering')->default(0);
             $table->boolean('is_active')->default(1);
             $table->softDeletes();
             $table->timestamps();
@@ -24,6 +23,8 @@ return new class extends Migration
 
         Schema::create('faq_translations', function (Blueprint $table) {
             $table->id();
+            $table->text('question');
+            $table->text('answer');
             $table->string('locale')->nullable();
             $table->foreignId('faq_id')->constrained()->cascadeOnDelete();
             $table->unique(['faq_id', 'locale']);

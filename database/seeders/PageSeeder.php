@@ -22,12 +22,10 @@ class PageSeeder extends Seeder
                     'en' => [
                         'title' => 'About Us',
                         'content' => 'This is the about page content in English.',
-                        'slug' => 'about-us',
                     ],
                     'ar' => [
                         'title' => 'من نحن',
                         'content' => 'هذا هو محتوى صفحة من نحن باللغة العربية.',
-                        'slug' => 'من-نحن',
                     ],
                 ],
             ],
@@ -38,12 +36,10 @@ class PageSeeder extends Seeder
                     'en' => [
                         'title' => 'Privacy Policy',
                         'content' => 'This is the privacy policy in English.',
-                        'slug' => 'privacy-policy',
                     ],
                     'ar' => [
                         'title' => 'سياسة الخصوصية',
                         'content' => 'هذه هي سياسة الخصوصية باللغة العربية.',
-                        'slug' => 'سياسة-الخصوصية',
                     ],
                 ],
             ],
@@ -54,12 +50,10 @@ class PageSeeder extends Seeder
                     'en' => [
                         'title' => 'Terms and Conditions',
                         'content' => 'These are the terms and conditions in English.',
-                        'slug' => 'terms-and-conditions',
                     ],
                     'ar' => [
                         'title' => 'الشروط والأحكام',
                         'content' => 'هذه هي الشروط والأحكام باللغة العربية.',
-                        'slug' => 'الشروط-والأحكام',
                     ],
                 ],
             ],
@@ -70,12 +64,10 @@ class PageSeeder extends Seeder
                     'en' => [
                         'title' => 'Contact Us',
                         'content' => 'This is the contact page content in English.',
-                        'slug' => 'contact-us',
                     ],
                     'ar' => [
                         'title' => 'اتصل بنا',
                         'content' => 'هذا هو محتوى صفحة اتصل بنا باللغة العربية.',
-                        'slug' => 'اتصل-بنا',
                     ],
                 ],
             ],
@@ -94,7 +86,6 @@ class PageSeeder extends Seeder
                     'page_id' => $pageId,
                     'title' => $translation['title'],
                     'content' => $translation['content'],
-                    'slug' => Str::slug($translation['slug']),
                     'locale' => $locale,
                 ]);
             }

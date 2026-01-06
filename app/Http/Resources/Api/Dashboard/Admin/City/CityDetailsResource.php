@@ -23,11 +23,11 @@ class CityDetailsResource extends JsonResource
         return [
                 'id'            => $this->id,
                 'is_active'     => (bool) $this->is_active,
-                'lat'           => $this->lat,
-                'lng'           => $this->lng,
-                'location'      => $this->location,
-                'code'          => $this->code,
-                'postal_code'   => $this->postal_code,
+                // 'lat'           => $this->lat,
+                // 'lng'           => $this->lng,
+                // 'location'      => $this->location,
+                // 'code'          => $this->code,
+                // 'postal_code'   => $this->postal_code,
                 'country'       => [
                     'id'        => $this->country->id,
                     'name'      => $this->country->name

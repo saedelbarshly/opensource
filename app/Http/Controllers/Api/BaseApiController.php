@@ -60,9 +60,12 @@ class BaseApiController extends Controller
             }
 
             if ($this->detailsResource) {
-                $data = $this->detailsResource::collection($collections);
                 if (request()->has('paginate')) {
-                    $data = $data->response()->getData(true);
+                    $this->detailsResource::wrap((new $this->model)->getTable());
+                    $data = $this->detailsResource::collection($collections)->response()->getData(true);
+                } else {
+                    $this->detailsResource::wrap('data');
+                    $data = $this->detailsResource::collection($collections);
                 }
             } else {
                 $data = $collections;
@@ -306,6 +309,7 @@ class BaseApiController extends Controller
             // Toggle the 'active' status
             $record->is_active = !$record->is_active;
             $record->save();
+            $record->refresh();
 
             // Format response with resource if available
             $data = $this->resource ? new $this->resource($record) : $record;
@@ -341,6 +345,7 @@ class BaseApiController extends Controller
             // Toggle the 'column' status
             $record->{$column} = !$record->{$column};
             $record->save();
+            $record->refresh();
 
             // Use the resource class for a formatted response
             $resource = new $this->resource($record);

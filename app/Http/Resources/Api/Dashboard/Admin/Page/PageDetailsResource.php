@@ -23,7 +23,7 @@ class PageDetailsResource extends JsonResource
 
         return [
                 'id'            => $this->id,
-                'media'         => $this->media,
+                'gallery'       => $this->gallery,
                 'type'          => $this->type,
             ] + $locales;
     }

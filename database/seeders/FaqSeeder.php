@@ -16,6 +16,7 @@ class FaqSeeder extends Seeder
     {
         $faqs = [
             [
+                'ordering' => 1,
                 'ar' => [
                     'question' => 'كيف يمكنني إنشاء حساب جديد؟',
                     'answer'   => 'يمكنك إنشاء حساب جديد من خلال الضغط على زر تسجيل وإنشاء حساب باستخدام بريدك الإلكتروني أو رقم الهاتف.',
@@ -26,6 +27,7 @@ class FaqSeeder extends Seeder
                 ],
             ],
             [
+                'ordering' => 2,
                 'ar' => [
                     'question' => 'ما هي طرق الدفع المتاحة؟',
                     'answer'   => 'نقبل عدة طرق للدفع مثل البطاقات البنكية، المحافظ الإلكترونية، والدفع عند الاستلام حسب منطقتك.',
@@ -36,6 +38,7 @@ class FaqSeeder extends Seeder
                 ],
             ],
             [
+                'ordering' => 3,
                 'ar' => [
                     'question' => 'كم يستغرق توصيل الطلب؟',
                     'answer'   => 'يتم توصيل الطلب عادة خلال 1 إلى 5 أيام عمل حسب موقعك ونوع الشحن.',
@@ -46,6 +49,7 @@ class FaqSeeder extends Seeder
                 ],
             ],
             [
+                'ordering' => 4,
                 'ar' => [
                     'question' => 'هل يمكنني إرجاع أو استبدال المنتج؟',
                     'answer'   => 'نعم، يمكنك إرجاع أو استبدال المنتج خلال مدة محددة بشرط أن يكون في حالته الأصلية.',
@@ -56,6 +60,7 @@ class FaqSeeder extends Seeder
                 ],
             ],
             [
+                'ordering' => 5,
                 'ar' => [
                     'question' => 'كيف يمكنني تتبع طلبي؟',
                     'answer'   => 'يمكنك تتبع حالة طلبك من خلال صفحة الطلبات داخل حسابك باستخدام رقم الطلب.',
@@ -71,14 +76,15 @@ class FaqSeeder extends Seeder
 
             // 1️⃣ Create FAQ (default AR content)
             $faq = Faq::create([
-                'question'  => $data['ar']['question'],
-                'answer'    => $data['ar']['answer'],
+                'ordering' => $data['ordering'],
                 'is_active' => true,
             ]);
 
             // 2️⃣ Create translations (AR + EN)
             foreach (['ar', 'en'] as $locale) {
                 FaqTranslation::create([
+                    'question'  => $data[$locale]['question'],
+                    'answer'    => $data[$locale]['answer'],
                     'faq_id' => $faq->id,
                     'locale' => $locale,
                 ]);

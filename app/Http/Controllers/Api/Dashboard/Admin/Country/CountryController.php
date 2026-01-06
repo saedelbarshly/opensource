@@ -12,6 +12,6 @@ class CountryController extends BaseApiController
 {
     public function __construct()
     {
-        parent::__construct(Country::class,CountryResource::class,CountryDetailsResource::class,CountryRequest::class);
+        parent::__construct(Country::class,CountryDetailsResource::class,CountryDetailsResource::class,CountryRequest::class);
     }
 }

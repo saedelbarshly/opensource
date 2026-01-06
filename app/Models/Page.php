@@ -13,7 +13,14 @@ class Page extends Model implements TranslatableContract
     protected $guarded = ['id', 'created_at', 'updated_at', 'deleted_at'];
     public $translatedAttributes = ['name'];
 
-
+    protected array $mediaColumns = [
+        'gallery' => [
+            'is_single'  => false,
+            'type'       => 'image',
+            'option'     => 'gallery',
+            'default'    => null,
+        ]
+    ];
     public function scopeActive($query){
         return $query->where('is_active', 1);
     }
