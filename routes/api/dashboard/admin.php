@@ -5,11 +5,17 @@ use App\Http\Controllers\Api\Dashboard\Admin\Faq\FaqController;
 use App\Http\Controllers\Api\Dashboard\Admin\Auth\AuthController;
 use App\Http\Controllers\Api\Dashboard\Admin\City\CityController;
 use App\Http\Controllers\Api\Dashboard\Admin\Page\PageController;
+use App\Http\Controllers\Api\Dashboard\Admin\Role\RoleController;
+use App\Http\Controllers\Api\Dashboard\Admin\Brand\BrandController;
+use App\Http\Controllers\Api\Dashboard\Admin\User\ClientController;
+use App\Http\Controllers\Api\Dashboard\Admin\User\VendorController;
 use App\Http\Controllers\Api\Dashboard\Admin\Auth\PasswordController;
 use App\Http\Controllers\Api\Dashboard\Admin\Country\CountryController;
 use App\Http\Controllers\Api\Dashboard\Admin\Profile\ProfileController;
 use App\Http\Controllers\Api\Dashboard\Admin\Setting\SettingController;
+use App\Http\Controllers\Api\Dashboard\Admin\User\SupervisorController;
 use App\Http\Controllers\Api\Dashboard\Admin\Category\CategoryController;
+use App\Http\Controllers\Api\Dashboard\Admin\Permission\PermissionController;
 use App\Http\Controllers\Api\Dashboard\Admin\Notification\NotificationController;
 use App\Http\Controllers\Api\Dashboard\Admin\Notification\SentNotificationController;
 
@@ -68,12 +74,30 @@ Route::middleware('set_locale')->group(function () {
         Route::patch('faqs/{faq}/toggle-active', [FaqController::class, 'toggleActive'])->name('faqs.toggle-active');
         Route::apiResource('faqs', FaqController::class);
 
-        Route::apiResource('settings', SettingController::class)->only(['index', 'store']); 
+        Route::apiResource('settings', SettingController::class)->only(['index', 'store']);
 
         Route::patch('categories/{category}/toggle-active', [CategoryController::class, 'toggleActive'])->name('categories.toggle-active');
         Route::patch('categories/{category}/toggle-returnable', [CategoryController::class, 'toggleReturnable'])->name('categories.toggle-returnable');
         Route::patch('categories/{category}/toggle-taxable', [CategoryController::class, 'toggleTaxable'])->name('categories.toggle-taxable');
         Route::apiResource('categories', CategoryController::class);
 
+        Route::patch('brands/{brand}/toggle-active', [BrandController::class, 'toggleActive'])->name('brands.toggle-active');
+        Route::apiResource('brands', BrandController::class);
+
+
+        Route::patch('supervisors/{supervisor}/toggle-active', [SupervisorController::class, 'toggleActive'])->name('supervisors.toggle-active');
+        Route::apiResource('supervisors', SupervisorController::class);
+
+        Route::patch('vendors/{vendor}/toggle-active', [VendorController::class, 'toggleActive'])->name('vendors.toggle-active');
+        Route::apiResource('vendors', VendorController::class);
+
+        Route::patch('clients/{client}/toggle-active', [ClientController::class, 'toggleActive'])->name('clients.toggle-active');
+        Route::apiResource('clients', ClientController::class);
+
+        Route::get('roles/list', [RoleController::class, 'list']);
+        Route::apiResource('roles', RoleController::class);
+        Route::get('permissions/list', [PermissionController::class, 'list']);
+        Route::get('permissions/sidebar', [PermissionController::class, 'sideBarPermissions']);
+        Route::apiResource('permissions', PermissionController::class);
     });
 });
