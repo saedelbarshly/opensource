@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Dashboard\Admin\Profile;
+namespace App\Http\Controllers\Api\App\Client\Profile;
 
 use App\Models\Permission;
 use Illuminate\Http\Request;

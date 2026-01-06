@@ -48,7 +48,7 @@ class AuthenticationService
                 return json(__('Account banned, please contact support'), status: 'fail', headerStatus: 403);
             }
 
-            if($request->device_token && $request->type){
+            if($request->device_token && $request->device_type){
                 $this->createDevice($request, $user);
             }
 
@@ -79,6 +79,7 @@ class AuthenticationService
             $request->merge([
                 'reset_code' => $otp,
                 'user_type' => $user_type,
+                'reset_code_expires_at' => now()->addMinutes(config('auth.code_timeout'))
             ]);
 
 
@@ -195,7 +196,7 @@ class AuthenticationService
                 return json(__('Account banned, please contact support'), status: 'fail', headerStatus: 403);
             }
 
-            if ($request->device_token && $request->type) {
+            if ($request->device_token && $request->device_type) {
                 $this->createDevice($request, $user);
             }
 
@@ -249,8 +250,8 @@ class AuthenticationService
             // Update device token if provided
             if ($request->device_token) {
                 $user->devices()->updateOrCreate(
-                    $request->only('type') + ['device_token' => $request->old_device_token],
-                    $request->only('type', 'device_token')
+                    $request->only('device_type') + ['device_token' => $request->old_device_token],
+                    $request->only('device_type', 'device_token')
                 );
             }
 
@@ -336,7 +337,7 @@ class AuthenticationService
                 ],
                 [
                     'device_token' => $request->device_token,
-                    'type' => $request->type,
+                    'device_type' => $request->device_type,
                     'status' => true
                 ]
             );

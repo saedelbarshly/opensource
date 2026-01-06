@@ -37,7 +37,7 @@ class UpdateAuthRequest extends ApiMasterRequest
                     ->where('user_type', $user_type)
                     ->whereNull('deleted_at')
                     ->ignore(auth('api')->id()),
-                Rule::exists('auth_verifications', $authType)
+                Rule::exists('authentication_verifications', $authType)
                     ->where('user_id', auth('api')->id())
                     ->where('reset_code', $this->input('code')),
             ],
@@ -48,7 +48,7 @@ class UpdateAuthRequest extends ApiMasterRequest
             'code'       => [
                 'required',
                 'digits_between:4,6',
-                Rule::exists('auth_verifications', 'reset_code')
+                Rule::exists('authentication_verifications', 'reset_code')
                     ->where('user_id', auth('api')->id())
                     ->where($authType, $this->auth),
             ]

@@ -22,7 +22,7 @@ enum UserType: string
     {
         return match ($userType) {
             self::ADMIN->value    => 'email',
-            self::VENDOR->value   => 'phone',
+            self::VENDOR->value   => 'email',
             self::CLIENT->value   => 'phone',
             default               => 'phone',
         };

@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('user_type')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('phone_verified_at')->nullable();
-            $table->string('reset_code')->nullable();
+            $table->string(column: 'reset_code')->nullable();
             $table->timestamp('reset_code_expires_at')->nullable();
             $table->string('password');
             $table->string('locale')->default('ar')->nullable();

@@ -52,8 +52,8 @@ class RegisterRequest extends ApiMasterRequest
                     if (!$country) {
                         $fail(__('Invalid country code'));
                     }
-                    if (strlen($value) != $country->phone_limit) {
-                        $fail(__('Phone number must be :digits digits', ['digits' => $country->phone_limit]));
+                    if (strlen($value) != $country->phone_length) {
+                        $fail(__('Phone number must be :digits digits', ['digits' => $country->phone_length]));
                     }
                 }
             ],

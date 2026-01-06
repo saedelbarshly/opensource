@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Dashboard\Admin\Profile;
+namespace App\Http\Controllers\Api\Dashboard\Vendor\Profile;
 
 use App\Models\Permission;
 use Illuminate\Http\Request;
@@ -12,6 +12,7 @@ use App\Http\Requests\Api\General\Profile\EditAuthRequest;
 use App\Http\Requests\Api\General\Profile\UpdateAuthRequest;
 use App\Http\Requests\Api\General\Profile\UpdateProfileRequest;
 use App\Http\Requests\Api\General\Profile\UpdatePasswordRequest;
+use App\Models\User;
 
 class ProfileController extends Controller
 {
@@ -19,7 +20,7 @@ class ProfileController extends Controller
 
     public function __construct(Request $request)
     {
-        $this->user = auth('api')->user();
+        $this->user = User::find(auth('api')->id());
     }
 
     public function show(Request $request): JsonResponse
@@ -43,6 +44,7 @@ class ProfileController extends Controller
             $request->auth_type => $request->auth
         ], [
             'reset_code' => $otp,
+            'reset_code_expires_at' => now()->addMinutes(config('auth.code_timeout')),
             'phone_code' => $request->auth_type == 'phone' ? $request->phone_code : null
         ]);
 
@@ -59,15 +61,17 @@ class ProfileController extends Controller
         ]);
 
         $this->user->authenticationVerifications()->where($request->auth_type, $request->auth)->delete();
-
-        return json(ShowProfileResource::make($this->user->refresh()), __('Auth was updated successfully'));
+        $token = auth('api')->login($this->user);
+        $user = $this->user->refresh();
+        $user->token = $token;
+        return json(ShowProfileResource::make($user), __('Auth was updated successfully'));
     }
 
     public function update(UpdateProfileRequest $request): JsonResponse
     {
         $this->user->update($request->validated());
 
-        return json(ShowProfileResource::make($this->user->refresh()));
+        return json(ShowProfileResource::make($this->user->refresh()),trans('Your profile has been updated successfully.'));
     }
 
     public function updateLocale(string $locale): JsonResponse

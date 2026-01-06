@@ -21,7 +21,7 @@ Route::middleware('set_locale')->group(function () {
 
     Route::group(['middleware' => ['auth:api', 'admin']], function () {
         Route::controller(ProfileController::class)->group(function () {
-            Route::put('password/update', 'updatePassword')->name('profile.update.password');
+            Route::put('password/change', 'updatePassword')->name('profile.update.password');
             Route::prefix('profile')->group(function () {
                 Route::get('/', 'show')->name('profile.show');
                 Route::get('/permissions', 'getMyPermissions')->name('profile.permissions');

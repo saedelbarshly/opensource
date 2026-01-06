@@ -31,19 +31,16 @@ trait NotificationChannelResolver
     protected function isOnlyRedisPrivilegedUser($notifiable): bool
     {
         return in_array($notifiable->user_type, [
-            // UserType::ADMIN,
-            // UserType::SUPER_ADMIN,
-            // UserType::SUPERVISOR,
-            // UserType::COMPANY,
+            UserType::ADMIN,
+            UserType::VENDOR,
         ]);
     }
 
     protected function shouldSendFcm($notifiable): bool
     {
         $allowedTypes = [
-            // UserType::CLIENT,
-            // UserType::DRIVER,
-            // UserType::GUEST,
+            UserType::CLIENT,
+            UserType::GUEST,
         ];
 
         return $notifiable->allow_notification && in_array($notifiable->user_type, $allowedTypes);

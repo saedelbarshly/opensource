@@ -38,8 +38,8 @@ class EditAuthRequest extends ApiMasterRequest
 
                     if ($authType === 'phone') {
                         $country = Country::where('phone_code', $this->input('phone_code'))->first();
-                        if ($country && strlen($value) != $country->phone_limit) {
-                            $fail(__('Phone number must be :digits digits.', ['digits' => $country->phone_limit]));
+                        if ($country && strlen($value) != $country->phone_length) {
+                            $fail(__('Phone number must be :digits digits.', ['digits' => $country->phone_length]));
                         }
                     }
                 }
@@ -54,7 +54,7 @@ class EditAuthRequest extends ApiMasterRequest
     {
         return [
             'auth_type'  => __('Auth Type'),
-            'auth'       => $this->auth_type =='email' ?__('Email') : __('Phone'),
+            'auth'       => $this->auth_type == 'email' ? __('Email') : __('Phone'),
             'phone_code' => __('Phone Code'),
         ];
     }
