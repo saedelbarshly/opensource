@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Enums\UserType;
+use App\Filter\UserFilter;
 use Modules\Media\Traits\MediaTrait;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Notifications\Notifiable;
@@ -70,6 +71,10 @@ class User extends Authenticatable implements JWTSubject
 
     // scopes
 
+    public function scopeFilter($query, UserFilter $filter)
+    {
+        return $filter->apply($query);
+    }
     // relations
     public function role(): BelongsTo
     {

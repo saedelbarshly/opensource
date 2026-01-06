@@ -22,21 +22,28 @@ class FCMChannel
             if (empty($deviceTokens)) {
                 return;
             }
-            
+
             $data = $this->transformData($notifiable, $notification);
 
-             foreach ($deviceTokens as $platform => $token) {
-                $payload = match ($platform) {
-                    'android' => AndroidPayload::build($token, $data),
-                    'ios'     => IosPayload::build($token, $data),
-                    default   => null,
-                };
+            foreach ($deviceTokens as $platform => $token) {
+                try {
+                    $payload = match ($platform) {
+                        'android' => AndroidPayload::build($token, $data),
+                        'ios'     => IosPayload::build($token, $data),
+                        default   => null,
+                    };
 
-                if ($payload) {
-                    $this->fcmClient->send($payload);
+                    if ($payload) {
+                        $this->fcmClient->send($payload);
+                    }
+                } catch (\Throwable $e) {
+                    Log::error('FCM Send Error', [
+                        'platform' => $platform,
+                        'notifiable_id' => $notifiable->id ?? null,
+                        'error' => $e->getMessage()
+                    ]);
                 }
             }
-
         } catch (\Throwable $e) {
             Log::error('FCM Channel Error', [
                 'notifiable_id' => $notifiable->id ?? null,
@@ -52,18 +59,27 @@ class FCMChannel
         $notifyType = $data['notify_type'] ?? null;
 
         if ($notifyType === 'management') {
-            $locale = $this->resolveLocale($notifiable);
-            
-            return [
-                'notify_type' => 'management',
-                'notify_id'   => null,
-                'title'       => $data['title'][$locale] ?? $data['title']['en'] ?? null,
-                'body'        => $data['body'][$locale] ?? $data['body']['en'] ?? null,
-                'sender_data' => $data['sender_data'] ?? null,
-            ];
+            return $this->transformManagementData($notifiable, $data);
         }
 
-        // General type: translation keys with params
+        return $this->transformGeneralData($notifiable, $data);
+    }
+
+    protected function transformManagementData($notifiable, array $data): array
+    {
+        $locale = $this->resolveLocale($notifiable);
+
+        return [
+            'notify_type' => 'management',
+            'notify_id'   => null,
+            'title'       => $data['title'][$locale] ?? $data['title']['en'] ?? null,
+            'body'        => $data['body'][$locale] ?? $data['body']['en'] ?? null,
+            'sender_data' => $data['sender_data'] ?? null,
+        ];
+    }
+
+    protected function transformGeneralData($notifiable, array $data): array
+    {
         $locale = $notifiable->locale ?? 'en';
         $params = $data['params'] ?? [];
 
@@ -73,9 +89,9 @@ class FCMChannel
         return [
             'title'         => $this->applyParams($titleTemplate, $params),
             'body'          => $this->applyParams($bodyTemplate, $params),
-            'type'          => $data['type'] ?? null,
+            'notify_type'   => $data['notify_type'] ?? null,
             'icon'          => $data['icon'] ?? null,
-            'notifiable_id' => $data['notifiable_id'] ?? null,
+            'notify_id'     => $data['notify_id'] ?? null,
         ];
     }
 
@@ -93,7 +109,7 @@ class FCMChannel
     {
         $locales = config('translatable.locales', ['en']);
         $userLocale = $notifiable->locale ?? 'en';
-        
+
         return in_array($userLocale, $locales) ? $userLocale : 'en';
     }
 }

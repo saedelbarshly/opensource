@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Dashboard\Vendor\Auth\AuthController;
 use App\Http\Controllers\Api\Dashboard\Vendor\Auth\PasswordController;
 use App\Http\Controllers\Api\Dashboard\Vendor\Profile\ProfileController;
+use App\Http\Controllers\Api\Dashboard\Admin\Notification\NotificationController;
 
 
 
@@ -34,5 +35,9 @@ Route::middleware('set_locale')->group(function () {
                 Route::patch('notification/switch', 'switchNotification')->name('profile.notification.switch');
             });
         });
+
+
+        Route::get('notifications/unread-count', [NotificationController::class, 'unReadCount']);
+        Route::apiResource('notifications', NotificationController::class);
     });
 });
