@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\Dashboard\Admin\Page\PageController;
 use App\Http\Controllers\Api\Dashboard\Admin\Auth\PasswordController;
 use App\Http\Controllers\Api\Dashboard\Admin\Country\CountryController;
 use App\Http\Controllers\Api\Dashboard\Admin\Profile\ProfileController;
+use App\Http\Controllers\Api\Dashboard\Admin\Setting\SettingController;
+use App\Http\Controllers\Api\Dashboard\Admin\Category\CategoryController;
 use App\Http\Controllers\Api\Dashboard\Admin\Notification\NotificationController;
 use App\Http\Controllers\Api\Dashboard\Admin\Notification\SentNotificationController;
 
@@ -65,5 +67,13 @@ Route::middleware('set_locale')->group(function () {
         Route::get('faqs/list', [FaqController::class, 'getWithoutPagination']);
         Route::patch('faqs/{faq}/toggle-active', [FaqController::class, 'toggleActive'])->name('faqs.toggle-active');
         Route::apiResource('faqs', FaqController::class);
+
+        Route::apiResource('settings', SettingController::class)->only(['index', 'store']); 
+
+        Route::patch('categories/{category}/toggle-active', [CategoryController::class, 'toggleActive'])->name('categories.toggle-active');
+        Route::patch('categories/{category}/toggle-returnable', [CategoryController::class, 'toggleReturnable'])->name('categories.toggle-returnable');
+        Route::patch('categories/{category}/toggle-taxable', [CategoryController::class, 'toggleTaxable'])->name('categories.toggle-taxable');
+        Route::apiResource('categories', CategoryController::class);
+
     });
 });

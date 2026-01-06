@@ -33,18 +33,15 @@ class SettingRequest extends ApiMasterRequest
             'lng'                           => ['sometimes','nullable'],
             'address'                       => ['sometimes','nullable'],
 
-            'app_tax'                       => 'required|numeric|min:1|max:99',
-            'cancellation_fee'              => 'required|numeric|min:1|max:99',
-            'scheduled_period'              => 'required|numeric|min:1|max:99',
-            'activation_period'             => 'required|numeric|min:1|max:120',
-            'offer_price_period'            => 'required|numeric|min:1|max:120',
-            'paid_period'                   => 'required|numeric|min:1|max:48',
-            'rate_period'                   => 'required|numeric|min:1|max:99',
-            'confirm_period'                => 'required|numeric|min:1|max:120',
 
-            'can_cancel_before_start_with_fee'    => 'required|boolean',
-            'can_cancel_after_start_with_fee'     => 'required|boolean',
-            'can_cancel_after_arrive'             => 'required|boolean',
+            'app_tax'                       => 'sometimes|numeric|min:1|max:99',
+            'vat'                           => 'required|numeric|min:1',
+            
+            'card'                          => 'sometimes|in:0,1',
+            'wallet'                        => 'sometimes|in:0,1',
+            'cash'                          => 'sometimes|in:0,1',
+            'max_debt'                      => 'required|numeric|min:1',
+            'return_period'                 => 'required|numeric|min:1|max:14', 
         ];
     }
 
