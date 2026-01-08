@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Astrotomic\Translatable\Translatable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
 
 class Category extends Model implements TranslatableContract
@@ -20,5 +21,10 @@ class Category extends Model implements TranslatableContract
     // scopes
     public function scopeActive($query){
         return $query->where('is_active', 1);
+    }
+
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'specialties');
     }
 }

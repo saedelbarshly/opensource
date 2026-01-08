@@ -34,7 +34,7 @@ class SettingRequest extends ApiMasterRequest
             'address'                       => ['sometimes','nullable'],
 
 
-            'app_tax'                       => 'sometimes|numeric|min:1|max:99',
+            'commission'                    => 'sometimes|numeric|min:1|max:99',
             'vat'                           => 'required|numeric|min:1',
             
             'card'                          => 'sometimes|in:0,1',

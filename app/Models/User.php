@@ -4,15 +4,21 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Models\Role;
+use App\Models\Device;
 use App\Enums\UserType;
+use App\Models\Category;
+use App\Models\Location;
 use App\Filter\UserFilter;
 use Modules\Media\Traits\MediaTrait;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Notifications\Notifiable;
+use App\Models\AuthenticationVerification;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable implements JWTSubject
 {
@@ -95,6 +101,12 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(Location::class);
     }
+
+    public function specialties(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class, 'specialties');
+    }
+
 
     // funcations
     public function isBanned(): bool

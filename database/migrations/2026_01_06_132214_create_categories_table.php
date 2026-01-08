@@ -16,8 +16,6 @@ return new class extends Migration
             $table->foreignId('parent_id')->nullable()->constrained('categories')->cascadeOnDelete();
             $table->tinyInteger('level')->default(1);
             $table->boolean('is_active')->default(1);
-            $table->boolean('is_returnable')->default(true);
-            $table->boolean('is_taxable')->default(true);
             $table->softDeletes();
             $table->timestamps();
         });
