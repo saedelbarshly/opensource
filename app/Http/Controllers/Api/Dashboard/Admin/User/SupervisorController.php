@@ -2,55 +2,69 @@
 
 namespace App\Http\Controllers\Api\Dashboard\Admin\User;
 
-use App\Enums\UserType;
 use App\Models\User;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Api\BaseApiController;
+use App\Enums\UserType;
+use App\Filter\UserFilter;
+use App\Http\Controllers\Controller;
 use App\Services\General\UserService;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use App\Http\Requests\Api\General\User\UserRequest;
+use App\Http\Resources\Api\General\ListUserResource;
 use App\Http\Resources\Api\General\ShowProfileResource;
-use App\Http\Requests\Api\Dashboard\Admin\Auth\SupervisorRequest;
 
-class SupervisorController extends BaseApiController
+class SupervisorController extends Controller
 {
-    private UserService $userService;
+    public function __construct(
+        private readonly UserService $userService
+    ) {}
 
-    public function __construct(UserService $userService)
+    public function index(UserFilter $userFilter): JsonResponse
     {
-        parent::__construct(User::class, ShowProfileResource::class, ShowProfileResource::class, SupervisorRequest::class);
-        $this->userService = $userService;
-    }
+        $supervisors = $this->userService->list($userFilter, UserType::ADMIN);
 
-    public function index()
-    {
-        $users = $this->userService->getAll(request(), UserType::ADMIN->value);
-        return $this->successResponse($users);
-    }
+        ListUserResource::wrap('supervisors');
 
-    public function store()
-    {
-        $request = resolve(SupervisorRequest::class);
-        $user = $this->userService->create($request->validated(), UserType::ADMIN->value);
-        return $this->successResponse(ShowProfileResource::make($user), 'Supervisor created successfully');
-    }
-
-    public function update($id)
-    {
-        $request = resolve(SupervisorRequest::class);
-        $user = User::findOrFail($id);
-        $user = $this->userService->update($user, $request->validated());
-        return $this->successResponse(ShowProfileResource::make($user), 'Supervisor updated successfully');
-    }
-
-    public function destroy($id)
-    {
-        $user = User::findOrFail($id);
-
-        // Prevent deleting self or super admin if needed
-        if (auth('api')->id() == $user->id) {
-            return $this->errorResponse([], 'Cannot delete yourself', 403);
+        if ($supervisors instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator) {
+            return json(
+                ListUserResource::collection($supervisors)
+                    ->response()
+                    ->getData(true),
+                trans('Supervisors retrieved successfully')
+            );
         }
 
+        return json(ListUserResource::collection($supervisors), trans('Supervisors retrieved successfully'));
+    }
+
+    public function show($id): JsonResponse
+    {
+        $supervisor = $this->userService->show($id, UserType::ADMIN, ['roles', 'permissions']);
+
+        return json(ShowProfileResource::make($supervisor), trans('Supervisor retrieved successfully'));
+    }
+
+    public function store(UserRequest $request): JsonResponse
+    {
+        $supervisor = $this->userService->create($request->validated() + ['user_type' => UserType::ADMIN->value]);
+
+        return json(ShowProfileResource::make($supervisor), trans('Supervisor created successfully'));
+    }
+
+    public function update(UserRequest $request, User $user): JsonResponse
+    {
+        $supervisor = $this->userService->update($user, $request->validated());
+        return json(ShowProfileResource::make($supervisor), trans('Supervisor updated successfully'));
+    }
+
+    public function destroy(User $user): JsonResponse
+    {
         $this->userService->delete($user);
-        return $this->successResponse([], 'Supervisor deleted successfully');
+        return json([], 'Supervisor deleted successfully');
+    }
+
+    public function toggle(User $user, string $field): JsonResponse
+    {
+        $supervisor = $this->userService->toggle($user, $field);
+        return json(ShowProfileResource::make($supervisor), trans('Supervisor status updated successfully'));
     }
 }

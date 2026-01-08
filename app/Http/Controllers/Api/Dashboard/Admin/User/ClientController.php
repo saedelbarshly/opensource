@@ -2,49 +2,69 @@
 
 namespace App\Http\Controllers\Api\Dashboard\Admin\User;
 
-use App\Enums\UserType;
 use App\Models\User;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Api\BaseApiController;
+use App\Enums\UserType;
+use App\Filter\UserFilter;
+use App\Http\Controllers\Controller;
 use App\Services\General\UserService;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use App\Http\Requests\Api\General\User\UserRequest;
+use App\Http\Resources\Api\General\ListUserResource;
 use App\Http\Resources\Api\General\ShowProfileResource;
-use App\Http\Requests\Api\Dashboard\Admin\Auth\ClientRequest;
 
-class ClientController extends BaseApiController
+class ClientController extends Controller
 {
-    private UserService $userService;
+    public function __construct(
+        private readonly UserService $userService
+    ) {}
 
-    public function __construct(UserService $userService)
+    public function index(UserFilter $userFilter): JsonResponse
     {
-        parent::__construct(User::class, ShowProfileResource::class, ShowProfileResource::class, ClientRequest::class);
-        $this->userService = $userService;
+        $clients = $this->userService->list($userFilter, UserType::CLIENT);
+
+        ListUserResource::wrap('clients');
+
+        if ($clients instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator) {
+            return json(
+                ListUserResource::collection($clients)
+                    ->response()
+                    ->getData(true),
+                trans('Clients retrieved successfully')
+            );
+        }
+
+        return json(ListUserResource::collection($clients), trans('Clients retrieved successfully'));
     }
 
-    public function index()
+    public function show($id): JsonResponse
     {
-        $users = $this->userService->getAll(request(), UserType::CLIENT->value);
-        return $this->successResponse($users);
+        $client = $this->userService->show($id, UserType::CLIENT, ['roles', 'permissions']);
+
+        return json(ShowProfileResource::make($client), trans('Client retrieved successfully'));
     }
 
-    public function store()
+    public function store(UserRequest $request): JsonResponse
     {
-        $request = resolve(ClientRequest::class);
-        $user = $this->userService->create($request->validated(), UserType::CLIENT->value);
-        return $this->successResponse(ShowProfileResource::make($user), 'Client created successfully');
+        $client = $this->userService->create($request->validated() + ['user_type' => UserType::CLIENT->value]);
+
+        return json(ShowProfileResource::make($client), trans('Client created successfully'));
     }
 
-    public function update($id)
+    public function update(UserRequest $request, User $user): JsonResponse
     {
-        $request = resolve(ClientRequest::class);
-        $user = User::findOrFail($id);
-        $user = $this->userService->update($user, $request->validated());
-        return $this->successResponse(ShowProfileResource::make($user), 'Client updated successfully');
+        $client = $this->userService->update($user, $request->validated());
+        return json(ShowProfileResource::make($client), trans('Client updated successfully'));
     }
 
-    public function destroy($id)
+    public function destroy(User $user): JsonResponse
     {
-        $user = User::findOrFail($id);
         $this->userService->delete($user);
-        return $this->successResponse([], 'Client deleted successfully');
+        return json([], 'Client deleted successfully');
+    }
+
+    public function toggle(User $user, string $field): JsonResponse
+    {
+        $client = $this->userService->toggle($user, $field);
+        return json(ShowProfileResource::make($client), trans('Client status updated successfully'));
     }
 }

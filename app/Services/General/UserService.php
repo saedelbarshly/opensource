@@ -3,62 +3,42 @@
 namespace App\Services\General;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use App\Enums\UserType;
+use App\Filter\UserFilter;
+
 class UserService
 {
-    public function getAll($request, $userType = null)
+    public function list(UserFilter $filter, UserType $type)
     {
-        $query = User::query();
-
-        if ($userType) {
-            $query->where('user_type', $userType);
-        }
-
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->has('is_active')) {
-            $query->where('is_active', $request->is_active);
-        }
-
-        if ($request->has('is_banned')) {
-            $query->where('is_banned', $request->is_banned);
-        }
-
-        $perPage = $request->input('perPage', 15);
-        $page = $request->input('page', 1);
-
-        if ($request->has('paginate')) {
-            return $query->latest()->paginate($perPage, ['*'], 'page', $page);
-        }
-
-        return $query->latest()->get();
+        return User::where('user_type', $type)
+            ->filter($filter)
+            ->orderByDesc('created_at')
+            ->when(
+                request('filters.perPage'),
+                fn($q) => $q->paginate(request('filters.perPage')),
+                fn($q) => $q->get()
+            );
     }
 
-    public function create(array $data, string $userType)
+    public function show($id, UserType $type, array $relations = []): User
     {
-        $data['user_type'] = $userType;
-
-        $data['email_verified_at'] = now();
-        $data['phone_verified_at'] = now();
-        $data['is_active'] = $data['is_active'] ?? true;
-
-        $user = User::create($data);
-
-        return $user;
+        return User::where('user_type', $type)
+            ->with($relations)
+            ->findOrFail($id);
     }
 
-    public function update(User $user, array $data)
+    public function create(array $data): User
     {
-        if (isset($data['password']) && filled($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
-        } else {
+        return User::create($data + [
+            'email_verified_at' => now(),
+            'phone_verified_at' => now(),
+            'is_active' => true
+        ]);
+    }
+
+    public function update(User $user, array $data): User
+    {
+        if (isset($data['password']) && !filled($data['password'])) {
             unset($data['password']);
         }
 
@@ -67,16 +47,19 @@ class UserService
         return $user;
     }
 
-    public function delete(User $user)
+    public function delete(User $user): bool
     {
-        $user->delete();
-        return true;
+        return $user->delete();
     }
 
-    public function toggleActive(User $user)
+    public function toggle(User $user, string $field): User
     {
-        $user->update(['is_active' => !$user->is_active]);
-        $user->refresh();
-        return $user;
+        if (in_array($field, ['is_active', 'is_banned'])) {
+            $user->update([
+                $field => ! $user->{$field}
+            ]);
+        }
+
+        return $user->refresh();
     }
 }
