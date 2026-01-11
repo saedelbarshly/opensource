@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Modules\Media\Traits\MediaTrait;
 use Illuminate\Database\Eloquent\Model;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -9,7 +10,7 @@ use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
 
 class Category extends Model implements TranslatableContract
 {
-    use Translatable;
+    use Translatable,MediaTrait;
     protected $guarded   = ['id', 'deleted_at','created_at', 'updated_at'];
     protected $casts = [
         'is_active' => 'boolean',
@@ -17,6 +18,15 @@ class Category extends Model implements TranslatableContract
         'is_taxable' => 'boolean',
     ];
     public $translatedAttributes = ['name'];
+
+     protected array $mediaColumns = [
+        'image' => [
+            'is_single'  => true,
+            'type'       => 'image',
+            'option'     => 'image',
+            'default'    => null,
+        ]
+    ];
 
     // scopes
     public function scopeActive($query){

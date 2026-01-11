@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Dashboard\Admin\Brand\BrandController;
 use App\Http\Controllers\Api\Dashboard\Admin\User\ClientController;
 use App\Http\Controllers\Api\Dashboard\Admin\User\VendorController;
 use App\Http\Controllers\Api\Dashboard\Admin\Auth\PasswordController;
+use App\Http\Controllers\Api\Dashboard\Admin\Coupon\CouponController;
 use App\Http\Controllers\Api\Dashboard\Admin\Country\CountryController;
 use App\Http\Controllers\Api\Dashboard\Admin\Profile\ProfileController;
 use App\Http\Controllers\Api\Dashboard\Admin\Setting\SettingController;
@@ -99,5 +100,8 @@ Route::middleware('set_locale')->group(function () {
         Route::get('permissions/list', [PermissionController::class, 'list']);
         Route::get('permissions/sidebar', [PermissionController::class, 'sideBarPermissions']);
         Route::apiResource('permissions', PermissionController::class);
+
+        Route::patch('coupons/{coupon}/toggle-active', [CouponController::class, 'toggleActive'])->name('coupons.toggle-active');
+        Route::apiResource('coupons', CouponController::class);
     });
 });
