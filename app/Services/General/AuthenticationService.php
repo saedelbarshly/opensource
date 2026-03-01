@@ -2,17 +2,17 @@
 
 namespace App\Services\General;
 
-use Carbon\Carbon;
 use App\Models\User;
+use App\Models\Guest;
 use App\Models\Device;
 use App\Enums\UserType;
-use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Resources\Api\General\ShowProfileResource;
+use App\Mail\GeneralMail;
 
 class AuthenticationService
 {
@@ -36,21 +36,24 @@ class AuthenticationService
                 $otp = generateOtp(4);
 
                 $user->update([
-                    'reset_code' => $otp
+                    'reset_code' => $otp,
+                    'reset_code_expires_at' => now()->addMinutes(config('auth.code_timeout')),
                 ]);
 
                 $this->SendOtp($user, $request, $otp, 'verify');
-
-                return json(ShowProfileResource::make($user),__('Please verify your account'));
+                DB::commit();
+                return json(ShowProfileResource::make($user), __('Please verify your account'));
             }
 
             if ($user->is_banned || $user->isBanned()) {
                 return json(__('Account banned, please contact support'), status: 'fail', headerStatus: 403);
             }
 
-            if($request->device_token && $request->device_type){
+            if ($request->device_token && $request->device_type) {
                 $this->createDevice($request, $user);
             }
+
+            $this->mergeGuestData($user);
 
             DB::commit();
 
@@ -59,7 +62,6 @@ class AuthenticationService
             data_set($user, 'token', $token);
 
             return json(ShowProfileResource::make($user), __('Logged in successfully'));
-
         } catch (\Exception $exception) {
             DB::rollBack();
             Log::error($exception);
@@ -90,11 +92,11 @@ class AuthenticationService
                 'phone' => $request->phone
             ], $request->all());
 
+            $this->mergeGuestData($user);
 
             $this->sendOtp($user, $request, $otp, 'verify');
 
             DB::commit();
-
         } catch (\Exception $exception) {
             DB::rollBack();
             Log::error($exception);
@@ -129,21 +131,28 @@ class AuthenticationService
      */
     private function sendOtpViaEmail($user, $request, $otp, $type): void
     {
-        // $email = $type === 'update_email' ? $request->auth : $user->email;
+        $email = $type === 'update_email' ? $request->auth : $user->email;
 
-        // if (!$email) {
-        //     Log::warning('Attempted to send email OTP but no email address available', [
-        //         'user_id' => $user->id,
-        //         'type' => $type
-        //     ]);
-        //     return;
-        // }
+        if (!$email) {
+            Log::warning('Attempted to send email OTP but no email address available', [
+                'user_id' => $user->id,
+                'type' => $type
+            ]);
+            return;
+        }
 
+        Mail::to($email)->send(new GeneralMail(
+            [
+                'code' => $otp,
+            ],
+            'otp-mail',
+            "Your verification code"
+        ));
         // $mailable = match ($type) {
-        //     'verify' => new \App\Mail\VerifyNewUser($user),
-        //     'update_password' => new \App\Mail\ForgetPassword($user),
-        //     'update_email' => new \App\Mail\UpdateEmail($user, $otp),
-        //     default => null,
+        //     'verify'            => new \App\Mail\VerifyNewUser($user),
+        //     'update_password'   => new \App\Mail\ForgetPassword($user),
+        //     'update_email'      => new \App\Mail\UpdateEmail($user, $otp),
+        //     default             => null,
         // };
 
         // if ($mailable) {
@@ -174,6 +183,8 @@ class AuthenticationService
         ]);
     }
 
+
+
     public function verify($request): JsonResponse
     {
         $user = $this->getUser($request);
@@ -190,6 +201,7 @@ class AuthenticationService
             $user->update([
                 'reset_code' => null,
                 'is_active' => true,
+                'phone_verified_at' => now(),
             ]);
 
             if ($user->is_banned || $user->isBanned()) {
@@ -207,7 +219,6 @@ class AuthenticationService
             DB::commit();
 
             return json(ShowProfileResource::make($user), __('Your account has been activated successfully'));
-
         } catch (\Exception $exception) {
             DB::rollBack();
             Log::error($exception);
@@ -225,8 +236,8 @@ class AuthenticationService
             $user->devices()->where('agent_token', $agent_token)->update(
                 [
                     'status' => false
-                ]);
-
+                ]
+            );
         } catch (\Exception $exception) {
             Log::error($exception);
         }
@@ -263,7 +274,6 @@ class AuthenticationService
                 'token_type' => 'bearer',
                 'expires_in' => auth('api')->factory()->getTTL() * 60
             ], __('Token refreshed successfully'));
-
         } catch (\Exception $exception) {
             Log::error($exception);
             return json(__('Could not refresh token'), status: 'fail', headerStatus: 401);
@@ -308,7 +318,6 @@ class AuthenticationService
             ]);
 
             return json(__('Password updated successfully'));
-
         } catch (\Exception $exception) {
             Log::error($exception);
             return json(__('Server error'), status: 'fail', headerStatus: 500);
@@ -323,7 +332,6 @@ class AuthenticationService
             ->where('user_type', $user_type)
             ->when($request->phone_code, fn($query) => $query->where('phone_code', $request->phone_code))
             ->first();
-
     }
 
     private function createDevice($request, $user): void
@@ -341,10 +349,31 @@ class AuthenticationService
                     'status' => true
                 ]
             );
-
         } catch (\Exception $exception) {
             Log::error($exception);
         }
     }
 
+    /**
+     * Merge guest data (cart, favorites, search) to authenticated user
+     */
+    private function mergeGuestData(User $user): void
+    {
+        if ($user->user_type !== UserType::CLIENT) {
+            return;
+        }
+
+        try {
+            $guest = Guest::where('token', request()->header('Agent-Token'))->first();
+
+            if ($guest) {
+                mergeGuestDataToUser($user, $guest);
+            }
+        } catch (\Exception $exception) {
+            Log::error('Failed to merge guest data', [
+                'user_id' => $user->id,
+                'error' => $exception->getMessage()
+            ]);
+        }
+    }
 }

@@ -2,9 +2,12 @@
 
 use App\Models\User;
 use App\Models\Device;
+use App\Models\Search;
 use App\Enums\UserType;
 use App\Models\Setting;
+use App\Models\Favorite;
 use App\Models\Equipment;
+use App\Models\Guest;
 use App\Models\Permission;
 use Illuminate\Support\Str;
 use App\Models\Verification;
@@ -44,18 +47,31 @@ if (!function_exists('setting')) {
         $setting = Setting::where('key', $attr)->first() ?? [];
 
         if ($attr == 'project_name') {
-            return !empty($setting) ? $setting->value : 'Aaleyat';
+            return !empty($setting) ? $setting->value : 'Suqna';
         }
 
         if ($attr == 'vat') {
             return !empty($setting) ? (int) $setting->value : 15;
         }
 
-        if ($attr == 'cancellation_fee') {
-            return !empty($setting) ? (int) $setting->value : 20;
+        if ($attr == 'commission') {
+            return !empty($setting) ? (int) $setting->value : 15;
+        }
+
+
+        if ($attr == 'max_debt') {
+            return !empty($setting) ? (int) $setting->value : 1000;
+        }
+
+        if ($attr == 'return_period') {
+            return !empty($setting) ? (int) $setting->value : 7;
         }
 
         if ($attr == 'online') {
+            return !empty($setting) ? $setting->value : true;
+        }
+
+        if ($attr == 'cod') {
             return !empty($setting) ? $setting->value : true;
         }
 
@@ -63,42 +79,9 @@ if (!function_exists('setting')) {
             return !empty($setting) ? $setting->value : true;
         }
 
-        if ($attr == 'cash') {
-            return !empty($setting) ? $setting->value : true;
-        }
-
-        if ($attr == 'app_tax') {
-            return !empty($setting) ? (int) $setting->value : 5;
-        }
-
-        if ($attr == 'cash_fees') {
-            return !empty($setting) ? (int) $setting->value : 2;
-        }
-
-        if ($attr == 'scheduled_period') { // order scheduled period or will cancel hours
-            return !empty($setting) ? (int) $setting->value : 24;
-        }
-        if ($attr == 'activation_period')  // driver activation period or will cancel minutes
-        {
-            return !empty($setting) ? (int) $setting->value : 30;
-        }
-        if ($attr == 'offer_price_period') // accept or reject offer price period or will cancel minutes
-        {
-            return !empty($setting) ? (int) $setting->value : 30;
-        }
-
-        if ($attr == 'paid_period') {  // order paid period or will cancel hours
-            return !empty($setting) ? (int) $setting->value : 24;
-        }
-        if ($attr == 'rate_period') {  // order paid period or will cancel minutes
+        if ($attr == 'shipping_cost') {
             return !empty($setting) ? (int) $setting->value : 10;
         }
-
-        if ($attr == 'confirm_period') // client confirm period or auto confirm munites
-        {
-            return !empty($setting) ? (int) $setting->value : 30;
-        }
-
 
         if ($attr == 'logo') {
             return !empty($setting) ? asset('storage/images/setting') . "/" . $setting->value : asset('dashboardAssets/images/icons/logo_sm.png');
@@ -157,7 +140,7 @@ if (!function_exists('getDateRange')) {
 }
 
 if (!function_exists('getDateRangeFilter')) {
-    function getDateRangeFilter($duration = 'month', $from = null, $to = null,$inputDate = null): array
+    function getDateRangeFilter($duration = 'month', $from = null, $to = null, $inputDate = null): array
     {
         $date = $inputDate
             ? (strlen($inputDate) === 7 ? Carbon::createFromFormat('Y-m', $inputDate) : Carbon::parse($inputDate))
@@ -199,6 +182,14 @@ if (!function_exists('getPeriodRange')) {
     function getPeriodRange(string $period): array
     {
         switch ($period) {
+            case 'day':
+                $currentStart = now()->startOfDay();
+                $currentEnd = now()->endOfDay();
+
+                $prevStart = now()->subDay()->startOfDay();
+                $prevEnd = now()->subDay()->endOfDay();
+                break;
+
             case 'week':
                 $currentStart = now()->startOfWeek();
                 $currentEnd = now()->endOfWeek();
@@ -227,7 +218,6 @@ if (!function_exists('getPeriodRange')) {
 
         return [$currentStart, $currentEnd, $prevStart, $prevEnd];
     }
-
 }
 
 if (!function_exists('generateUniqueUsername')) {
@@ -270,7 +260,7 @@ if (!function_exists('generateOtp')) {
             for ($i = 0; $i < $length; $i++) {
                 $code .= rand(0, 9);
             }
-            $exists = Verification::where('code', $code)->exists();
+            $exists = User::where('code', $code)->exists();
         } while ($exists);
 
         return $code;
@@ -279,7 +269,8 @@ if (!function_exists('generateOtp')) {
 
 
 if (!function_exists('generatePassword')) {
-    function generatePassword() {
+    function generatePassword()
+    {
         $word = ucfirst(strtolower(substr(str_shuffle('abcdefghijklmnopqrstuvwxyz'), 0, 6)));
         $symbols = ['@', '#', '$', '%', '&', '*', '!'];
         $symbol = $symbols[array_rand($symbols)];
@@ -304,7 +295,6 @@ if (!function_exists('createDevice')) {
                     'device_type' => $request->device_type,
                 ]
             );
-
         } catch (\Exception $exception) {
             Log::error($exception);
         }
@@ -318,33 +308,41 @@ if (!function_exists('generateVerificationToken')) {
     }
 }
 
-if (!function_exists('log_activity')) {
+if (! function_exists('log_activity')) {
     function log_activity(string $class, $data, string $level = 'info'): void
     {
         $separator = str_repeat('=', 120);
 
+        // Get caller file & line
+        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+        $caller = $trace[1] ?? [];
+
+        $context = [
+            'file' => $caller['file'] ?? null,
+            'line' => $caller['line'] ?? null,
+        ];
+
         $formattedData = is_array($data) || is_object($data)
-            ? json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            ? json_encode(array_merge($context, (array) $data), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
             : (string) $data;
 
-        if (in_array($level, ['info', 'debug', 'warning', 'error', 'critical'], true)) {
-            Log::$level($separator);
-            Log::$level("$class => $formattedData");
-            Log::$level($separator);
-        } else {
-            Log::info($separator);
-            Log::info("$class => $formattedData");
-            Log::info($separator);
-        }
+        $level = in_array($level, ['info', 'debug', 'warning', 'error', 'critical'], true)
+            ? $level
+            : 'info';
+
+        Log::$level($separator);
+        Log::$level("$class => $formattedData");
+        Log::$level($separator);
     }
 }
+
 
 
 if (!function_exists('permissions_names')) {
     function permissions_names()
     {
         $user = auth('api')->user();
-        $prefix = $user->role()->first()->prefix;
+        $prefix = $user->role->prefix;
         $all = Permission::where('prefix', $prefix)->pluck('back_route_name')->toArray();
         $permissions_names = [];
         foreach ($all as $item) {
@@ -404,7 +402,7 @@ if (!function_exists('calcAppTax')) {
 }
 
 
-if(!function_exists('refundAmount')) {
+if (!function_exists('refundAmount')) {
     function refundAmount($amount): float
     {
         return ($amount - ($amount * (setting('cancellation_fee') / 100)));
@@ -413,27 +411,114 @@ if(!function_exists('refundAmount')) {
 
 
 
-if (!function_exists('notifySafely'))
-{
+if (!function_exists('notifySafely')) {
     function notifySafely($notifiables, $notification): void
     {
         if ($notifiables) {
             Notification::send($notifiables, $notification);
         }
-//        $notifiables = is_array($notifiables) ? $notifiables : [$notifiables];
-//
-//        $notifiables = array_filter($notifiables);
-//
-//        if (empty($notifiables)) {
-//            return;
-//        }
-//
-//
-//        Notification::send($notifiables, $notification);
+        //        $notifiables = is_array($notifiables) ? $notifiables : [$notifiables];
+        //
+        //        $notifiables = array_filter($notifiables);
+        //
+        //        if (empty($notifiables)) {
+        //            return;
+        //        }
+        //
+        //
+        //        Notification::send($notifiables, $notification);
     }
+}
 
+if (!function_exists('getNotificationIcon')) {
+    function getNotificationIcon($icon): object
+    {
+        return (object) [
+            'id'     => null,
+            'path'   => asset('assets/images/icons/' . $icon),
+            'type'   => 'image',
+            'option' => 'icon',
+        ];
+    }
+}
+
+if (!function_exists('supervisors')) {
+    function supervisors()
+    {
+        return User::where('user_type', UserType::ADMIN)
+            ->where('is_active', true)
+            ->get();
+    }
 }
 
 
+if (!function_exists('mergeGuestDataToUser')) {
+    function mergeGuestDataToUser(User $user, Guest $guest)
+    {
+        if (!$guest) return;
+
+        // 1️⃣ Merge Cart Items
+        $guestCart = $guest->cart;
+        if ($guestCart && $guestCart->items->isNotEmpty()) {
+            // Get or create user's cart
+            $userCart = $user->cart()->firstOrCreate([
+                'user_id' => $user->id,
+            ]);
+
+            foreach ($guestCart->items as $guestItem) {
+                // Find if user already has this exact item (same product + variant)
+                $existingItem = $userCart->items()
+                    ->where('product_id', $guestItem->product_id)
+                    ->where('variant_id', $guestItem->variant_id)
+                    ->first();
+
+                if ($existingItem) {
+                    // Replace quantity with guest's quantity (not increment)
+                    $existingItem->update([
+                        'quantity' => $guestItem->quantity,
+                    ]);
+                } else {
+                    // Add new item to user's cart
+                    $userCart->items()->create([
+                        'product_id' => $guestItem->product_id,
+                        'variant_id' => $guestItem->variant_id,
+                        'vendor_id'  => $guestItem->vendor_id,
+                        'quantity'   => $guestItem->quantity,
+                    ]);
+                }
+            }
+
+            // Delete guest cart and items
+            $guestCart->items()->delete();
+            $guestCart->delete();
+        }
+
+        // 2️⃣ Merge Favorites
+        foreach ($guest->favorites as $fav) {
+            Favorite::firstOrCreate([
+                'user_id'          => $user->id,
+                'favoritable_id'   => $fav->favoritable_id,
+                'favoritable_type' => $fav->favoritable_type,
+            ]);
+        }
+
+        // 3️⃣ Merge Search History
+        foreach ($guest->search as $search) {
+            Search::firstOrCreate([
+                'user_id' => $user->id,
+                'keyword' => $search->keyword,
+            ]);
+        }
+
+        // 4️⃣ Clean up guest data
+        $guest->favorites()->delete();
+        $guest->search()->delete();
+        $guest->delete();
+    }
+}
 
 
+    function vat($amount): float
+{
+    return $amount * (12 / 100);
+}   
