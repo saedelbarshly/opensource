@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Jobs;
+namespace Modules\Notification\Jobs;
 
 use App\Models\User;
 use App\Enums\UserType;
@@ -24,8 +24,7 @@ class ManagementNotificationJob implements ShouldQueue
         private array $data,
         private array $requestData,
         private ?NotificationGroup $group = null,
-    )
-    {}
+    ) {}
 
 
     /**
@@ -34,10 +33,12 @@ class ManagementNotificationJob implements ShouldQueue
     public function handle()
     {
         $data = [
-            'title' => $this->requestData['data']['title'],
-            'body' =>  $this->requestData['data']['body'],
+            'title'       => $this->requestData['data']['title'],
+            'body'        => $this->requestData['data']['body'],
             'notify_type' => $this->data['notify_type'],
             'sender_data' => $this->data['sender_data'],
+            'icon'        => $this->data['icon'],
+            'params'      => $this->data['params'],
             'notify_id' => null,
         ];
 
@@ -53,7 +54,7 @@ class ManagementNotificationJob implements ShouldQueue
 
         if (is_array($userIds) && count($userIds) > 0) {
             $query->whereIn('id', $userIds);
-        }else{
+        } else {
             $userTypes = match ($type) {
                 'all'     => [
                     UserType::CLIENT,

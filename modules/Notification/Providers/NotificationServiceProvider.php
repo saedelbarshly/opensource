@@ -32,6 +32,10 @@ class NotificationServiceProvider extends ServiceProvider
         Notification::extend('redis', function ($app) {
             return $app->make(RedisChannel::class);
         });
+
+        Notification::extend('fcm', function ($app) {
+            return $app->make(FCMChannel::class);
+        });
     }
 
     /**

@@ -37,6 +37,6 @@ class ChunkNotificationJob implements ShouldQueue
     public function handle()
     {
         $users = User::whereIn('id', $this->userIds)->get();
-        Notification::send($users, new ManagementNotification($this->data, $this->group));
+        notifySafely($users,new ManagementNotification($this->data, $this->group));
     }
 }

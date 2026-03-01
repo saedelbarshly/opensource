@@ -17,7 +17,14 @@ class FcmClient
     ) {
         $this->http = $http;
         $this->tokenProvider = $tokenProvider;
-        $this->projectId = $tokenProvider->getProjectId();
+    }
+
+    protected function getProjectId(): string
+    {
+        if (!isset($this->projectId)) {
+            $this->projectId = $this->tokenProvider->getProjectId();
+        }
+        return $this->projectId;
     }
 
     /**
@@ -26,7 +33,7 @@ class FcmClient
     public function send(array $payload): bool
     {
         $response = $this->http->post(
-            "https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send",
+            "https://fcm.googleapis.com/v1/projects/{$this->getProjectId()}/messages:send",
             [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $this->tokenProvider->getAccessToken(),

@@ -6,6 +6,7 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Log;
 
+
 class RedisChannel
 {
     public function send($notifiable, Notification $notification): void
@@ -16,7 +17,7 @@ class RedisChannel
                 'data'  => $this->dataTransformer($notifiable, $notification)
             ];
 
-            Redis::publish("laravel-channel", json_encode($payload));
+            Redis::publish("socket-channel", json_encode($payload));
         } catch (\Throwable $e) {
             Log::error('Redis Channel Error', [
                 'notifiable_id' => $notifiable->id ?? null,
@@ -47,6 +48,7 @@ class RedisChannel
             'notify_id'   => null,
             'title'       => $data['title'][$locale] ?? $data['title']['en'] ?? null,
             'body'        => $data['body'][$locale] ?? $data['body']['en'] ?? null,
+            'icon'        => $data['icon'] ?? null,
             'sender_data' => $data['sender_data'] ?? null,
         ];
     }

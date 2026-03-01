@@ -22,7 +22,7 @@ trait NotificationChannelResolver
                 $channels[] = 'fcm';
             }
         } catch (\Throwable $th) {
-           Log::error('Notification channel resolver error: ' . $th->getMessage());
+            Log::error('Notification channel resolver error: ' . $th->getMessage());
         }
 
         return $channels;
@@ -43,6 +43,6 @@ trait NotificationChannelResolver
             UserType::GUEST,
         ];
 
-        return $notifiable->allow_notification && in_array($notifiable->user_type, $allowedTypes);
+        return $notifiable->is_notify && in_array($notifiable->user_type, $allowedTypes);
     }
 }

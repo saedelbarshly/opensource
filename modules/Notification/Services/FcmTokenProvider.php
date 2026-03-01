@@ -8,20 +8,27 @@ use RuntimeException;
 
 class FcmTokenProvider
 {
-    protected array $credentials;
+    protected ?array $credentials = null;
     protected Client $http;
+    protected string $credentialsPath;
 
     public function __construct(Client $http)
     {
         $this->http = $http;
+        $this->credentialsPath = storage_path('app/firebase.json');
+    }
 
-        $path = storage_path('app/firebase.json');
+    protected function loadCredentials(): void
+    {
+        if ($this->credentials !== null) {
+            return;
+        }
 
-        if (!file_exists($path)) {
+        if (!file_exists($this->credentialsPath)) {
             throw new RuntimeException('Firebase credentials file not found.');
         }
 
-        $this->credentials = json_decode(file_get_contents($path), true);
+        $this->credentials = json_decode(file_get_contents($this->credentialsPath), true);
 
         if (empty($this->credentials['client_email']) || empty($this->credentials['private_key'])) {
             throw new RuntimeException('Invalid Firebase credentials file.');
@@ -33,6 +40,7 @@ class FcmTokenProvider
      */
     public function getProjectId(): string
     {
+        $this->loadCredentials();
         return $this->credentials['project_id'];
     }
 
@@ -41,6 +49,7 @@ class FcmTokenProvider
      */
     public function getAccessToken(): string
     {
+        $this->loadCredentials();
         return Cache::remember('fcm_access_token', 3500, function () {
             $jwt = $this->buildJwt();
 

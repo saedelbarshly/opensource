@@ -23,66 +23,62 @@ trait MediaTrait
         return $this->morphMany(Media::class, 'model');
     }
 
-    // public function getMediaAttribute($options = null)
-    // {
-    //     return Media::where('model_id', $this->id)
-    //         ->where('model_type', get_class($this))
-    //         ->get()
-    //         ->map(function ($media) {
-    //             return [
-    //                 'id'        => $media->id,
-    //                 'path'      => asset('storage/' . $media->path . '/' . $media->name),
-    //                 'type'      => $media->type,
-    //                 'option'    => $media->option
-    //             ];
-    //         });
-    // }
 
-   public function __get($key)
-   {
-       if (isset($this->mediaColumns[$key])) {
-           $isSingle = $this->mediaColumns[$key] === 0;
+    public function __get($key)
+    {
+        if (isset($this->mediaColumns[$key])) {
+            $isSingle = $this->mediaColumns[$key]['is_single'];
 
-           $query = $this->media()->where('option', $key)->latest();
+            $query = $this->media()->where('option', $key)->latest();
 
-           if ($isSingle) {
-               $media = $query->first();
+            if ($isSingle) {
+                $media = $query->first();
 
-               return $media ? [
-                   'id'     => $media->id,
-                   'path'   => asset('storage/' . trim($media->path, '/') . '/' . $media->name),
-                   'type'   => $media->type,
-                   'option' => $media->option,
-               ] : null;
-           }
+                if ($media) {
+                    return [
+                        'id'     => $media->id,
+                        'path'   => asset('storage/' . trim($media->path, '/') . '/' . $media->name),
+                        'type'   => $media->type,
+                        'option' => $media->option,
+                    ];
+                }
 
-           // Multiple images (return collection)
-           return $query->get()->map(function ($media) {
-               return [
-                   'id'     => $media->id,
-                   'path'   => asset('storage/' . trim($media->path, '/') . '/' . $media->name),
-                   'type'   => $media->type,
-                   'option' => $media->option,
-               ];
-           });
-       }
+                if (isset($this->mediaColumns[$key]['default']) && $this->mediaColumns[$key]['default']) {
+                    return [
+                        'id'     => null,
+                        'path'   => $this->mediaColumns[$key]['default'],
+                        'type'   => $this->mediaColumns[$key]['type'] ?? 'image',
+                        'option' => $key,
+                    ];
+                }
+                return null;
+            }
 
-       return parent::__get($key);
-   }
+            // Multiple images (return collection)
+            return $query->get()->map(function ($media) {
+                return [
+                    'id'     => $media->id,
+                    'path'   => asset('storage/' . trim($media->path, '/') . '/' . $media->name),
+                    'type'   => $media->type,
+                    'option' => $media->option,
+                ];
+            });
+        }
+
+        return parent::__get($key);
+    }
 
     /**
      * Optionally, a helper to get all media grouped by option.
      */
-   public function getAllMediaByOption(): array
-   {
-       $media = [];
+    public function getAllMediaByOption(): array
+    {
+        $media = [];
 
-       foreach ($this->mediaColumns as $option => $isMultiple) {
-           $media[$option] = $this->{$option};
-       }
+        foreach ($this->mediaColumns as $option => $isMultiple) {
+            $media[$option] = $this->{$option};
+        }
 
-       return $media;
-   }
-
-
+        return $media;
+    }
 }

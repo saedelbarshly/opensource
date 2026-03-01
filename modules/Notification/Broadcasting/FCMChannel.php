@@ -36,6 +36,12 @@ class FCMChannel
                     if ($payload) {
                         $this->fcmClient->send($payload);
                     }
+
+                    Log::info('FCM Send Success', [
+                        'platform' => $platform,
+                        'notifiable_id' => $notifiable->id ?? null,
+                        'data' => $data
+                    ]);
                 } catch (\Throwable $e) {
                     Log::error('FCM Send Error', [
                         'platform' => $platform,
@@ -74,6 +80,7 @@ class FCMChannel
             'notify_id'   => null,
             'title'       => $data['title'][$locale] ?? $data['title']['en'] ?? null,
             'body'        => $data['body'][$locale] ?? $data['body']['en'] ?? null,
+            'icon'        => $data['icon'] ?? null,
             'sender_data' => $data['sender_data'] ?? null,
         ];
     }
