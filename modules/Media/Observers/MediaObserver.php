@@ -16,6 +16,13 @@ class MediaObserver
         }
     }
 
+    // public function deleting(Media $model): void
+    // {
+    //     if (Storage::disk($model->disk)->exists( $model->path . '/' . $model->name)) {
+    //         Storage::disk($model->disk)->delete($model->path . '/' . $model->name);
+    //     }
+    // }
+
     public function deleting(Media $model): void
     {
         $disk = Storage::disk($model->disk ?? 'public');
