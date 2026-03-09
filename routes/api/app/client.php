@@ -1,10 +1,11 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\App\Client\Auth\AuthController;
 use App\Http\Controllers\Api\App\Client\Auth\PasswordController;
-use App\Http\Controllers\Api\App\Client\Profile\ProfileController;
 use App\Http\Controllers\Api\App\Client\Notification\NotificationController;
+use App\Http\Controllers\Api\App\Client\Profile\ProfileController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\App\Client\Post\PostController;
 
 
 
@@ -52,5 +53,10 @@ Route::middleware('set_locale')->group(function () {
 
         Route::get('notifications/unread-count', [NotificationController::class, 'unReadCount']);
         Route::apiResource('notifications', NotificationController::class);
+    });
+
+    Route::prefix('posts')->group(function () {
+        Route::get('/', [PostController::class, 'index'])->name('posts.index');
+        Route::post('/', [PostController::class, 'store'])->name('posts.store');
     });
 });
